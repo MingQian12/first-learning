@@ -1,2 +1,59 @@
-hello world!
-世界，你好！
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#读取文件
+#打开文件ex1data1.txt，并分别以'population'和'profit'为列索引
+data = pd.read_csv('ex1data1.txt',names=['population','profit'])
+data.plot.scatter(x='population',y='profit',label='population')
+plt.show()
+
+#数据准备
+data.insert(0,'ones',1) #在数据的第一列插入以'ones'为列名，内容全为1的一列数据
+X = data.iloc[:,0:-1] #X为data数据第一列到倒数第二列的数据
+Y =data.iloc[:,-1] #Y为data数据最后一列数据
+X = X.values
+Y = Y.values
+Y = Y.reshape(97,1) #将Y化为97行1列的数据
+
+#损失函数
+def costFunction(X,Y,θ):
+    cost = (X@θ - Y)**2
+    return np.sum(cost)/(2*len(X))
+
+θ = np.zeros((2,1)) #初始化θ为([0],[0])
+cost_init = costFunction(X,Y,θ) #初始的代价值
+print(cost_init)
+
+#梯度下降函数
+def gradientDescent(X,Y,α,θ,iters):
+    costs = [] #定义空列表，用于存放代价值
+    for i in range(iters):
+        θ = θ - α * X.T @ (X @ θ - Y)/(len(X)) #梯度下降函数
+        cost = costFunction(X,Y,θ)
+        costs.append(cost)
+        
+        if i % 200 == 0:
+            print(cost)
+    return θ, costs
+
+α = 0.005#学习率为0.01
+iters = 2000 #迭代次数为2000
+
+θ, costs = gradientDescent(X,Y,α,θ,iters)
+print(costs)
+
+#绘制cost变化曲线图
+fig, (ax1,ax2) = plt.subplots(1,2)
+ax1.plot(np.arange(iters),costs)
+ax1.set_xlabel('iters')
+ax1.set_ylabel('cost')
+ax1.set_title('cost vs iters')
+
+#绘制预测函数图像
+x = np.linspace(np.min(Y),np.max(Y),100)
+y = θ[0][0] + θ[1][0]*x
+data.plot.scatter(x='population',y='profit',ax=ax2)
+ax2.plot(x,y,color='red')
+ax2.set_title('curve-fitting')
+plt.show()
